@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.git
+.env
+.env.*
+!.env.example
+coverage
+logs
+*.log
+.tmp
+test-results
+playwright-report
+*.tsbuildinfo
