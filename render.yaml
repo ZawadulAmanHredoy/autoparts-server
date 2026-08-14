@@ -12,9 +12,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
-        value: https://autoparts-client.onrender.com
+        value: https://autoparts-client-ol6f.onrender.com
       - key: GOOGLE_CALLBACK_URL
-        value: https://autoparts-client.onrender.com/api/auth/google/callback
+        value: https://autoparts-client-ol6f.onrender.com/api/auth/google/callback
       - key: MONGODB_URI
         sync: false
       - key: JWT_ACCESS_SECRET
