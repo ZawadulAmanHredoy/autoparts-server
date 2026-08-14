@@ -3,6 +3,7 @@ import { schemas } from "../shared/index.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import {
+  confirmPayment,
   createOrder,
   getOrderById,
   myOrders,
@@ -86,6 +87,31 @@ router.get("/me", requireAuth, myOrders);
  *         description: Not found
  */
 router.get("/:id", requireAuth, validate(schemas.idParam, "params"), getOrderById);
+
+/**
+ * @openapi
+ * /api/orders/{id}/confirm-payment:
+ *   post:
+ *     summary: Confirm an order after the client-side Stripe payment succeeds
+ *     description: Verifies the Stripe PaymentIntent actually succeeded before
+ *       confirming the order (decrements stock, emails the customer). In dev
+ *       mode without Stripe configured this confirms the order directly.
+ *     tags: [Orders]
+ *     security: [{ cookieAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Confirmed order
+ *       400:
+ *         description: Payment not completed
+ *       404:
+ *         description: Not found
+ */
+router.post("/:id/confirm-payment", requireAuth, validate(schemas.idParam, "params"), confirmPayment);
 
 /**
  * @openapi

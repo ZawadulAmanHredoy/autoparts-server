@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
 import { swaggerSpec } from "./config/swagger.js";
 import { configureGoogleAuth } from "./services/googleAuth.js";
+import { getPublishableKey, paymentMode } from "./services/payment.service.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFound.js";
 import { apiRateLimiter, requestLogger } from "./middleware/rateLimit.js";
@@ -40,9 +41,11 @@ export function createApp(): Express {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+          frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+          connectSrc: ["'self'", "https://api.stripe.com"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
+          imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://*.stripe.com"],
         },
       },
     }),
@@ -77,6 +80,37 @@ export function createApp(): Express {
    */
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", uptime: process.uptime() });
+  });
+
+  // Stripe publishable key for the client checkout (public, safe to expose).
+  /**
+   * @swagger
+   * /api/payment/config:
+   *   get:
+   *     summary: Stripe checkout config for the client
+   *     description: Returns the active payment mode and the Stripe publishable
+   *       key needed to load Stripe Elements on the checkout page. The publishable
+   *       key is public by design. "dev" mode means Stripe is not configured and
+   *       checkout runs without real payment collection.
+   *     tags: [Payments]
+   *     security: []
+   *     responses:
+   *       200:
+   *         description: Payment configuration
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 mode: { type: string, enum: [stripe, dev] }
+   *                 publishableKey: { type: string, nullable: true }
+   */
+  app.get("/api/payment/config", (_req, res) => {
+    const stripe = paymentMode();
+    res.json({
+      mode: stripe,
+      publishableKey: stripe === "stripe" ? getPublishableKey() : null,
+    });
   });
 
   // API Docs

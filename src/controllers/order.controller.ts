@@ -5,7 +5,11 @@ import { Order, type OrderDoc } from "../models/order.model.js";
 import { Part, type PartDoc } from "../models/part.model.js";
 import { toPublicPart } from "../services/catalogSerializer.js";
 import { confirmOrder } from "../services/order.service.js";
-import { createPaymentIntent, paymentMode } from "../services/payment.service.js";
+import {
+  createPaymentIntent,
+  paymentMode,
+  verifyPaymentSuccess,
+} from "../services/payment.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { serializeOrder } from "../services/orderSerializer.js";
 
@@ -110,6 +114,31 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
     throw new ForbiddenError("You do not have access to this order");
   }
   res.json(serializeOrder(order as OrderDoc));
+});
+
+/** POST /api/orders/:id/confirm-payment — called by the client after Stripe
+ *  confirms the card. Verifies the payment with Stripe before confirming the
+ *  order so a payment is never trusted from the client alone. The webhook
+ *  remains the authoritative confirm path in production. */
+export const confirmPayment = asyncHandler(async (req: Request, res: Response) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new NotFoundError("Order");
+  if (order.userId !== req.user!.id && req.user!.role !== "admin") {
+    throw new ForbiddenError("You do not have access to this order");
+  }
+
+  if (paymentMode() !== "stripe") {
+    const confirmed = await confirmOrder(order.id);
+    res.json({ order: confirmed });
+    return;
+  }
+
+  if (!order.paymentIntentId) throw new AppError(409, "Order has no payment intent");
+  const paid = await verifyPaymentSuccess(order.paymentIntentId);
+  if (!paid) throw new AppError(400, "Payment has not been completed");
+
+  const confirmed = await confirmOrder(order.id);
+  res.json({ order: confirmed });
 });
 
 /** POST /api/orders/:id/pay — dev-mode confirmation fallback (no Stripe). */

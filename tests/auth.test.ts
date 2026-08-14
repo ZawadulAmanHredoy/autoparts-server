@@ -39,11 +39,11 @@ describe("auth", () => {
     expect(res.body.success).toBe(true);
   });
 
-  it("GET /api/auth/status → 200 ok", async () => {
+  it("GET /api/auth/status → 200 with googleConfigured false (no env)", async () => {
     const res = await api.get("/api/auth/status");
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("ok");
-    expect(typeof res.body.googleConfigured).toBe("boolean");
+    expect(res.body.googleConfigured).toBe(false);
   });
 
   it("unknown route → 404 with requestId", async () => {

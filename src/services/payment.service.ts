@@ -12,6 +12,18 @@ function getStripe(): Stripe | null {
   return env.STRIPE_SECRET_KEY ? new Stripe(env.STRIPE_SECRET_KEY) : null;
 }
 
+export function getPublishableKey(): string | null {
+  return env.STRIPE_PUBLISHABLE_KEY || null;
+}
+
+/** True when the given PaymentIntent has been successfully charged. */
+export async function verifyPaymentSuccess(paymentIntentId: string): Promise<boolean> {
+  const stripe = getStripe();
+  if (!stripe) return false;
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  return pi.status === "succeeded";
+}
+
 export interface PaymentIntentResult {
   paymentIntentId: string;
   clientSecret: string | null;
