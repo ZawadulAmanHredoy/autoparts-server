@@ -5,7 +5,7 @@ services:
     repo: https://github.com/ZawadulAmanHredoy/autoparts-server
     plan: free
     region: oregon
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: node dist/index.js
     healthCheckPath: /health
     envVars:
