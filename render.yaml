@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: autoparts-server
+    runtime: node
+    repo: https://github.com/ZawadulAmanHredoy/autoparts-server
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://autoparts-client.onrender.com
+      - key: GOOGLE_CALLBACK_URL
+        value: https://autoparts-client.onrender.com/api/auth/google/callback
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
